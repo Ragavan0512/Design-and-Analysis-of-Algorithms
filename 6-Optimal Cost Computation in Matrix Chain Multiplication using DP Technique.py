@@ -1,20 +1,16 @@
+import streamlit as st
+
+
 def matrix_chain_order(dims):
-    """
-    Matrix Chain Multiplication using DP
-    dims: list of dimensions, matrix i has dims[i-1] x dims[i]
-    Time: O(n^3), Space: O(n^2)
-    """
     n = len(dims) - 1
 
-    # m[i][j] = minimum multiplications for matrices i..j
     m = [[0] * (n + 1) for _ in range(n + 1)]
     s = [[0] * (n + 1) for _ in range(n + 1)]
 
-    # l is the chain length
     for l in range(2, n + 1):
         for i in range(1, n - l + 2):
             j = i + l - 1
-            m[i][j] = float('inf')
+            m[i][j] = float("inf")
 
             for k in range(i, j):
                 cost = (
@@ -41,36 +37,58 @@ def print_optimal_parens(s, i, j):
     return f"({left} x {right})"
 
 
-def print_dp_table(m, n):
-    print("\nDP Cost Table m[i][j]:")
+st.set_page_config(page_title="Matrix Chain Multiplication", page_icon="📊")
 
-    print(f'{"":>6}', end="")
-    for j in range(1, n + 1):
-        print(f'A{j:>8}', end="")
-    print()
+st.title("📊 Matrix Chain Multiplication using Dynamic Programming")
 
-    for i in range(1, n + 1):
-        print(f'A{i:<5}', end="")
-        for j in range(1, n + 1):
-            if j < i:
-                print(f'{"---":>9}', end="")
-            else:
-                print(f'{m[i][j]:>9}', end="")
-        print()
+st.write(
+    "Enter the dimensions separated by commas.\n"
+    "Example: **10,30,5,60,10**"
+)
 
+dimension_input = st.text_input(
+    "Matrix Dimensions",
+    value="10,30,5,60,10"
+)
 
-# Example:
-# A1(10x30), A2(30x5), A3(5x60), A4(60x10)
-dims = [10, 30, 5, 60, 10]
-n = len(dims) - 1
+if st.button("Calculate"):
+    try:
+        dims = [int(x.strip()) for x in dimension_input.split(",")]
 
-print("Matrix Dimensions:")
-for i in range(n):
-    print(f" A{i+1}: {dims[i]} x {dims[i+1]}")
+        if len(dims) < 2:
+            st.error("Please enter at least two dimensions.")
+        else:
+            n = len(dims) - 1
 
-m, s = matrix_chain_order(dims)
+            st.subheader("Matrices")
+            for i in range(n):
+                st.write(f"**A{i+1}** : {dims[i]} × {dims[i+1]}")
 
-print(f"\nMinimum scalar multiplications: {m[1][n]}")
-print(f"Optimal parenthesization: {print_optimal_parens(s, 1, n)}")
+            m, s = matrix_chain_order(dims)
 
-print_dp_table(m, n)
+            st.success(
+                f"Minimum Scalar Multiplications: **{m[1][n]}**"
+            )
+
+            st.info(
+                f"Optimal Parenthesization: **{print_optimal_parens(s,1,n)}**"
+            )
+
+            st.subheader("DP Cost Table")
+
+            table = []
+            headers = [""] + [f"A{i}" for i in range(1, n + 1)]
+
+            for i in range(1, n + 1):
+                row = [f"A{i}"]
+                for j in range(1, n + 1):
+                    if j < i:
+                        row.append("---")
+                    else:
+                        row.append(m[i][j])
+                table.append(row)
+
+            st.table(table)
+
+    except ValueError:
+        st.error("Please enter valid integers separated by commas.")
